@@ -5,52 +5,63 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
 	"os"
-	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	connHost = "127.0.0.1"
-	connPort = "135"
-	connType = "tcp"
-)
+var collection *mongo.Collection
+var ctx = context.TODO()
 
-type Trainer struct {
-	Content   string `bson:"content"`   // Contenu
-	StartTime int64  `bson:"startTime"` // Temps de création
-	EndTime   int64  `bson:"endTime"`   // Date d'expiration
-	Read      uint   `bson:"read"`      // Lire
-}
-
-func creatconversation(database string, id string, content string, read uint, expire int64) (err error) {
-
-	collection := conf.MongoDBClient.Database(database).Collection(id)
-	comment := ws.Trainer{
-
-		Content:   content,
-		StartTime: time.Now().Unix(),
-		EndTime:   time.Now().Unix() + expire,
-		Read:      read,
-	}
-	_, err = collection.InsertOne(context.TODO(), comment)
-	return
-}
-func ii() {
-	fmt.Println("Connecting to " + connType + " server " + connHost + ":" + connPort)
-	conn, err := net.Dial(connType, connHost+":"+connPort)
+func init() {
+	clientOptions := options.Client().ApplyURI("mongodb://root:example@0.0.0.0:27017/")
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		fmt.Println("Error connecting:", err.Error())
-		os.Exit(1)
+		log.Fatal(err)
 	}
+
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	collection = client.Database("conversation").Collection("chat2")
+}
+
+type Message struct {
+	ID   primitive.ObjectID `bson:"_id"`
+	Text string             `bson:"text"`
+}
+
+func creatConversation(task *Message) error {
+	_, err := collection.InsertOne(ctx, task)
+	return err
+}
+
+func sendMessage() {
 	reader := bufio.NewReader(os.Stdin)
 
-	for {
+	for i := 0; i < 5; i++ {
+
 		fmt.Print("Text to send: ")
-		reader.ReadString('\n')
 
-		message, _ := bufio.NewReader(conn).ReadString('\n')
+		a, _ := reader.ReadString('\n')
+		log.Print("you write :", a)
+		str := a
+		task := &Message{
+			ID:   primitive.NewObjectID(),
+			Text: str,
+		}
+		creatConversation(task)
 
-		log.Print("Server relay:", message)
 	}
+
 }
+func main() {
+
+	sendMessage()
+
+}
+
