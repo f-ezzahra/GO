@@ -43,29 +43,18 @@ func creatConversation(task *Message) error {
 func sendMessage() {
 	reader := bufio.NewReader(os.Stdin)
 
-	for {
+	for i := 0; i < 5; i++ {
 
 		fmt.Print("Text to send: ")
 
 		a, _ := reader.ReadString('\n')
-		switch {
-		case a == "bye":
-			fmt.Println("Good bye")
-			break
-		case a == "quit":
-			fmt.Println("Good bye")
-			break
-
-		default:
-			log.Print("you write :", a)
-			str := a
-			task := &Message{
-				ID:   primitive.NewObjectID(),
-				Text: str,
-			}
-			creatConversation(task)
-
+		log.Print("you write :", a)
+		str := a
+		task := &Message{
+			ID:   primitive.NewObjectID(),
+			Text: str,
 		}
+		creatConversation(task)
 
 	}
 
@@ -75,3 +64,4 @@ func main() {
 	sendMessage()
 
 }
+
